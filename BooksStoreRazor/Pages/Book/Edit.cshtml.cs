@@ -12,63 +12,39 @@ namespace BooksStoreRazor.Pages.Book
 {
     public class EditModel : PageModel
     {
-        private readonly BooksStoreRazor.Model.AppDbContext _context;
+        private readonly AppDbContext _db;
 
-        public EditModel(BooksStoreRazor.Model.AppDbContext context)
+        public EditModel(AppDbContext db)
         {
-            _context = context;
+            _db = db;
         }
 
         [BindProperty]
-        public Books Books { get; set; }
-
-        public async Task<IActionResult> OnGetAsync(int? id)
+        public Books Book { get; set; }
+        [TempData]
+        public string msg { get; set; }
+        public async Task OnGet(int id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            Books = await _context.Books.FirstOrDefaultAsync(m => m.Id == id);
-
-            if (Books == null)
-            {
-                return NotFound();
-            }
-            return Page();
+            Book = await _db.Books.FindAsync(id);
         }
 
-        public async Task<IActionResult> OnPostAsync()
+
+        public async Task<IActionResult> OnPost()
         {
-            if (!ModelState.IsValid)
+            if (ModelState.IsValid)
             {
-                return Page();
+                var BookFromDb = await _db.Books.FindAsync(Book.Id);
+                BookFromDb.BookName = Book.BookName;
+                BookFromDb.ISBN = Book.ISBN;
+                BookFromDb.Author = Book.Author;
+
+                await _db.SaveChangesAsync();
+                msg = "Updated";
+                return RedirectToPage("Index");
             }
 
-            _context.Attach(Books).State = EntityState.Modified;
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!BooksExists(Books.Id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-
-            return RedirectToPage("./Index");
-        }
-
-        private bool BooksExists(int id)
-        {
-            return _context.Books.Any(e => e.Id == id);
+            return RedirectToPage();
         }
     }
+
 }

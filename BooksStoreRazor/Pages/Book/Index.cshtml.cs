@@ -18,7 +18,8 @@ namespace BooksStoreRazor.Pages.Book
             _db = context;
         }
         public IEnumerable<Books> Books { get; set; }
-
+        [TempData]
+        public string msg { get; set; }
         public async Task OnGet()
         {
             Books = await _db.Books.ToListAsync();
@@ -33,7 +34,7 @@ namespace BooksStoreRazor.Pages.Book
             }
             _db.Books.Remove(book);
             await _db.SaveChangesAsync();
-
+            msg = "Deleted";
             return RedirectToPage("Index");
         }
     }
